@@ -1,7 +1,10 @@
 module Main exposing (Model, Msg, main)
 
 import Browser
-import Html exposing (Html, main_)
+import Html exposing (Html)
+import Html.Attributes
+import Svg exposing (Svg)
+import Svg.Attributes
 
 
 
@@ -36,10 +39,61 @@ update msg model =
 -- VIEW
 
 
+viewGrid : Svg msg
+viewGrid =
+    let
+        viewVerticalLine : Int -> Svg msg
+        viewVerticalLine i =
+            Svg.line
+                [ Svg.Attributes.x1 (i * 10 |> String.fromInt)
+                , Svg.Attributes.y1 "-1000"
+                , Svg.Attributes.x2 (i * 10 |> String.fromInt)
+                , Svg.Attributes.y2 "1000"
+                , (if i == 0 then
+                    "axis line"
+
+                   else if modBy 10 i == 0 then
+                    "thick line"
+
+                   else
+                    "line"
+                  )
+                    |> Svg.Attributes.class
+                ]
+                []
+
+        viewHorizontalLine : Int -> Svg msg
+        viewHorizontalLine i =
+            Svg.line
+                [ Svg.Attributes.x1 "-1000"
+                , Svg.Attributes.y1 (i * 10 |> String.fromInt)
+                , Svg.Attributes.x2 "1000"
+                , Svg.Attributes.y2 (i * 10 |> String.fromInt)
+                , (if i == 0 then
+                    "axis line"
+
+                   else if modBy 10 i == 0 then
+                    "thick line"
+
+                   else
+                    "line"
+                  )
+                    |> Svg.Attributes.class
+                ]
+                []
+    in
+    Svg.g [ Svg.Attributes.class "grid" ]
+        [ Svg.g [] (List.range -100 100 |> List.map viewVerticalLine)
+        , Svg.g [] (List.range -100 100 |> List.map viewHorizontalLine)
+        ]
+
+
 view : Model -> Html Msg
 view _ =
-    main_ []
-        [ Html.h3 [] [ Html.text "Elm physics engine" ]
+    Html.main_ [ Html.Attributes.id "app" ]
+        [ Svg.svg [ Svg.Attributes.viewBox "-500 -500 1000 1000", Svg.Attributes.preserveAspectRatio "XmidYmid meet" ]
+            [ viewGrid
+            ]
         ]
 
 
