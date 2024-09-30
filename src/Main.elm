@@ -1,7 +1,9 @@
 module Main exposing (Model, Msg, main)
 
 import Browser
-import Engine.Vector as Vector exposing (Vector)
+import Browser.Events
+import Engine.Particle as Particle exposing (Particle)
+import Engine.Vector as Vector
 import Html exposing (Html)
 import Html.Attributes
 import Svg exposing (Svg)
@@ -13,15 +15,13 @@ import Svg.Attributes
 
 
 type alias Model =
-    List ( String, Vector )
+    Particle
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( [ ( "red", Vector.new 5 3 0 )
-      , ( "green", Vector.new 2.5 -2 0 )
-      , ( "orange", Vector.cross (Vector.new 5 3 0) (Vector.new 2.5 -2 0) )
-      ]
+    ( Particle.new Vector.zero
+        |> Particle.applyForce (Vector.new 12 0 0)
     , Cmd.none
     )
 
@@ -31,14 +31,18 @@ init _ =
 
 
 type Msg
-    = NoOp
+    = Tick Float
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        NoOp ->
-            ( model, Cmd.none )
+        Tick dt ->
+            ( model
+                |> Particle.applyGravity
+                |> Particle.update dt
+            , Cmd.none
+            )
 
 
 
@@ -94,16 +98,18 @@ viewGrid =
         ]
 
 
-viewVector : ( String, Vector ) -> Svg msg
-viewVector ( color, vector ) =
-    Svg.g []
-        [ Svg.line
-            [ Svg.Attributes.x1 "0"
-            , Svg.Attributes.y1 "0"
-            , Svg.Attributes.x2 (String.fromFloat (vector.x * 10))
-            , Svg.Attributes.y2 (String.fromFloat -(vector.y * 10))
-            , Svg.Attributes.stroke color
-            , Svg.Attributes.strokeLinecap "round"
+particleTransform : Particle -> Svg.Attribute msg
+particleTransform particle =
+    Svg.Attributes.transform ("translate(" ++ String.fromFloat particle.position.x ++ ", " ++ String.fromFloat -particle.position.y ++ ")")
+
+
+viewParticle : Particle -> Svg msg
+viewParticle particle =
+    Svg.g [ particleTransform particle ]
+        [ Svg.circle
+            [ Svg.Attributes.cx "0"
+            , Svg.Attributes.cy "0"
+            , Svg.Attributes.r "5"
             ]
             []
         ]
@@ -112,9 +118,9 @@ viewVector ( color, vector ) =
 view : Model -> Html Msg
 view model =
     Html.main_ [ Html.Attributes.id "app" ]
-        [ Svg.svg [ Svg.Attributes.viewBox "-100 -100 200 200", Svg.Attributes.preserveAspectRatio "XmidYmid meet" ]
+        [ Svg.svg [ Svg.Attributes.viewBox "-250 -250 500 500", Svg.Attributes.preserveAspectRatio "XmidYmid meet" ]
             [ viewGrid
-            , Svg.g [] (List.map viewVector model)
+            , viewParticle model
             ]
         ]
 
@@ -125,7 +131,7 @@ view model =
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    Sub.none
+    Browser.Events.onAnimationFrameDelta ((\dt -> dt / 1000) >> Tick)
 
 
 
