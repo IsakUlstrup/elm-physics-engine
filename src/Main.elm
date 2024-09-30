@@ -162,8 +162,8 @@ view : Model -> Html Msg
 view model =
     Html.main_ [ Html.Attributes.id "app" ]
         [ Svg.svg
-            [ Svg.Attributes.viewBox "-250 -250 500 500"
-            , Svg.Attributes.preserveAspectRatio "XmidYmid meet"
+            [ Svg.Attributes.viewBox "-100 -100 200 200"
+            , Svg.Attributes.preserveAspectRatio "XmidYmid slice"
             ]
             [ viewGrid
             , viewParticle model.particle
