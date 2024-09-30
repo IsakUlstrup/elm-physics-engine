@@ -3,6 +3,7 @@ module Main exposing (Model, Msg, main)
 import Browser
 import Browser.Events
 import Engine.Particle as Particle exposing (Particle)
+import Engine.Timing exposing (Timing)
 import Engine.Vector as Vector exposing (Vector)
 import Html exposing (Html)
 import Html.Attributes
@@ -15,13 +16,18 @@ import Svg.Attributes
 
 
 type alias Model =
-    Particle
+    { timing : Timing
+    , particle : Particle
+    }
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( Particle.new Vector.zero
-        |> Particle.applyForce (Vector.new 12 0 0)
+    ( Model
+        Engine.Timing.new
+        (Particle.new Vector.zero
+            |> Particle.applyForce (Vector.new 1 2 0)
+        )
     , Cmd.none
     )
 
@@ -34,13 +40,28 @@ type Msg
     = Tick Float
 
 
+fixedUpdate : Float -> Particle -> Particle
+fixedUpdate dt particle =
+    particle
+        |> Particle.applyGravity
+        |> Particle.update dt
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Tick dt ->
-            ( model
-                |> Particle.applyGravity
-                |> Particle.update dt
+            let
+                ( newTimer, newParticle ) =
+                    Engine.Timing.fixedUpdate
+                        fixedUpdate
+                        dt
+                        ( model.timing, model.particle )
+            in
+            ( { model
+                | timing = newTimer
+                , particle = newParticle
+              }
             , Cmd.none
             )
 
@@ -115,7 +136,13 @@ viewVector vector =
 
 particleTransform : Particle -> Svg.Attribute msg
 particleTransform particle =
-    Svg.Attributes.transform ("translate(" ++ String.fromFloat particle.position.x ++ ", " ++ String.fromFloat -particle.position.y ++ ")")
+    Svg.Attributes.transform
+        ("translate("
+            ++ String.fromFloat particle.position.x
+            ++ ", "
+            ++ String.fromFloat -particle.position.y
+            ++ ")"
+        )
 
 
 viewParticle : Particle -> Svg msg
@@ -134,9 +161,12 @@ viewParticle particle =
 view : Model -> Html Msg
 view model =
     Html.main_ [ Html.Attributes.id "app" ]
-        [ Svg.svg [ Svg.Attributes.viewBox "-250 -250 500 500", Svg.Attributes.preserveAspectRatio "XmidYmid meet" ]
+        [ Svg.svg
+            [ Svg.Attributes.viewBox "-250 -250 500 500"
+            , Svg.Attributes.preserveAspectRatio "XmidYmid meet"
+            ]
             [ viewGrid
-            , viewParticle model
+            , viewParticle model.particle
             ]
         ]
 
@@ -147,7 +177,7 @@ view model =
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    Browser.Events.onAnimationFrameDelta ((\dt -> dt / 1000) >> Tick)
+    Browser.Events.onAnimationFrameDelta Tick
 
 
 
