@@ -9,6 +9,7 @@ module Engine.Vector exposing
     , magnitude
     , new
     , normalize
+    , scale
     , subtract
     , zero
     )
