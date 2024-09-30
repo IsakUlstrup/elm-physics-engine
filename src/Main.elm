@@ -3,7 +3,7 @@ module Main exposing (Model, Msg, main)
 import Browser
 import Browser.Events
 import Engine.Particle as Particle exposing (Particle)
-import Engine.Vector as Vector
+import Engine.Vector as Vector exposing (Vector)
 import Html exposing (Html)
 import Html.Attributes
 import Svg exposing (Svg)
@@ -98,6 +98,21 @@ viewGrid =
         ]
 
 
+viewVector : Vector -> Svg msg
+viewVector vector =
+    Svg.g []
+        [ Svg.line
+            [ Svg.Attributes.x1 "0"
+            , Svg.Attributes.y1 "0"
+            , Svg.Attributes.x2 (String.fromFloat vector.x)
+            , Svg.Attributes.y2 (String.fromFloat -vector.y)
+            , Svg.Attributes.stroke "red"
+            , Svg.Attributes.strokeLinecap "round"
+            ]
+            []
+        ]
+
+
 particleTransform : Particle -> Svg.Attribute msg
 particleTransform particle =
     Svg.Attributes.transform ("translate(" ++ String.fromFloat particle.position.x ++ ", " ++ String.fromFloat -particle.position.y ++ ")")
@@ -112,6 +127,7 @@ viewParticle particle =
             , Svg.Attributes.r "5"
             ]
             []
+        , viewVector particle.velocity
         ]
 
 
