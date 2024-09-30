@@ -8,9 +8,10 @@ type alias Particle =
     , velocity : Vector
     , acceleration : Vector
     , damping : Float
+    , inverseMass : Float
     }
 
 
 new : Vector -> Particle
 new position =
-    Particle position Vector.zero Vector.zero 0.995
+    Particle position Vector.zero Vector.zero 0.995 0.5
