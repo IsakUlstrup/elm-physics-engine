@@ -25,8 +25,10 @@ init : () -> ( Model, Cmd Msg )
 init _ =
     ( Model
         Engine.Timing.new
-        (Particle.new Vector.zero
-            |> Particle.applyForce (Vector.new 1 2 0)
+        (Particle.new
+            |> Particle.setPosition (Vector.new -50 -20 0)
+            |> Particle.setMass 0.1
+            |> Particle.applyForce (Vector.new 40 200 0)
         )
     , Cmd.none
     )
@@ -44,6 +46,7 @@ fixedUpdate : Float -> Particle -> Particle
 fixedUpdate dt particle =
     particle
         |> Particle.applyGravity
+        |> Particle.applyDragForce 0.001 0.003
         |> Particle.update dt
 
 
