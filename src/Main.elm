@@ -12,12 +12,41 @@ import Svg.Attributes
 
 
 
+-- SYSTEM
+
+
+type System
+    = Gravity
+    | Drag
+    | Time
+
+
+applySystem : Float -> System -> Particle -> Particle
+applySystem dt system particle =
+    case system of
+        Gravity ->
+            particle |> Particle.applyGravity
+
+        Drag ->
+            particle |> Particle.applyDragForce 0.001 0.003
+
+        Time ->
+            particle |> Particle.update dt
+
+
+applySystems : List System -> Float -> Particle -> Particle
+applySystems systems dt particle =
+    List.foldl (applySystem dt) particle systems
+
+
+
 -- MODEL
 
 
 type alias Model =
     { timing : Timing
     , particle : Particle
+    , systems : List System
     }
 
 
@@ -30,6 +59,7 @@ init _ =
             |> Particle.setMass 0.1
             |> Particle.applyForce (Vector.new 40 200 0)
         )
+        [ Time, Gravity ]
     , Cmd.none
     )
 
@@ -42,14 +72,6 @@ type Msg
     = Tick Float
 
 
-fixedUpdate : Float -> Particle -> Particle
-fixedUpdate dt particle =
-    particle
-        |> Particle.applyGravity
-        |> Particle.applyDragForce 0.001 0.003
-        |> Particle.update dt
-
-
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
@@ -57,7 +79,7 @@ update msg model =
             let
                 ( newTimer, newParticle ) =
                     Engine.Timing.fixedUpdate
-                        fixedUpdate
+                        (applySystems model.systems)
                         dt
                         ( model.timing, model.particle )
             in
