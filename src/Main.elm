@@ -1,10 +1,10 @@
-module Main exposing (Model, Msg, main)
+module Main exposing (Model, Msg, System, main)
 
 import Browser
 import Browser.Events
 import Engine.Particle as Particle exposing (Particle)
 import Engine.Scene as Scene exposing (Scene)
-import Engine.Vector exposing (Vector)
+import Engine.Vector as Vector exposing (Vector)
 import Html exposing (Html)
 import Html.Attributes
 import Svg exposing (Svg)
@@ -47,7 +47,12 @@ init : () -> ( Model, Cmd Msg )
 init _ =
     ( Model
         (Scene.empty
-            |> Scene.addParticle Particle.new
+            |> Scene.addParticle
+                (Particle.new
+                    |> Particle.setMass 0.1
+                    |> Particle.setPosition (Vector.new -80 -20 0)
+                    |> Particle.applyForce (Vector.new 100 300 0)
+                )
             |> Scene.addSystem Gravity
             |> Scene.addSystem Time
             |> Scene.addSystem Drag
