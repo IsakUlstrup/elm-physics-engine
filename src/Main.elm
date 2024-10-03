@@ -3,8 +3,8 @@ module Main exposing (Model, Msg, main)
 import Browser
 import Browser.Events
 import Engine.Particle as Particle exposing (Particle)
-import Engine.Timing exposing (Timing)
-import Engine.Vector as Vector exposing (Vector)
+import Engine.Scene as Scene exposing (Scene)
+import Engine.Vector exposing (Vector)
 import Html exposing (Html)
 import Html.Attributes
 import Svg exposing (Svg)
@@ -25,18 +25,13 @@ applySystem : Float -> System -> Particle -> Particle
 applySystem dt system particle =
     case system of
         Gravity ->
-            particle |> Particle.applyGravity
+            Particle.applyGravity particle
 
         Drag ->
-            particle |> Particle.applyDragForce 0.001 0.003
+            Particle.applyDragForce 0.001 0.003 particle
 
         Time ->
-            particle |> Particle.update dt
-
-
-applySystems : List System -> Float -> Particle -> Particle
-applySystems systems dt particle =
-    List.foldl (applySystem dt) particle systems
+            Particle.update dt particle
 
 
 
@@ -44,22 +39,19 @@ applySystems systems dt particle =
 
 
 type alias Model =
-    { timing : Timing
-    , particle : Particle
-    , systems : List System
+    { scene : Scene System
     }
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
     ( Model
-        Engine.Timing.new
-        (Particle.new
-            |> Particle.setPosition (Vector.new -50 -20 0)
-            |> Particle.setMass 0.1
-            |> Particle.applyForce (Vector.new 40 200 0)
+        (Scene.empty
+            |> Scene.addParticle Particle.new
+            |> Scene.addSystem Gravity
+            |> Scene.addSystem Time
+            |> Scene.addSystem Drag
         )
-        [ Time, Gravity ]
     , Cmd.none
     )
 
@@ -76,16 +68,8 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Tick dt ->
-            let
-                ( newTimer, newParticle ) =
-                    Engine.Timing.fixedUpdate
-                        (applySystems model.systems)
-                        dt
-                        ( model.timing, model.particle )
-            in
             ( { model
-                | timing = newTimer
-                , particle = newParticle
+                | scene = Scene.tick applySystem dt model.scene
               }
             , Cmd.none
             )
@@ -191,7 +175,7 @@ view model =
             , Svg.Attributes.preserveAspectRatio "XmidYmid slice"
             ]
             [ viewGrid
-            , viewParticle model.particle
+            , Svg.g [] (List.map viewParticle model.scene.particles)
             ]
         ]
 
