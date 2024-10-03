@@ -19,6 +19,7 @@ type System
     = Gravity
     | Drag
     | Time
+    | Buoyancy
 
 
 applySystem : Float -> System -> Particle -> Particle
@@ -28,10 +29,21 @@ applySystem dt system particle =
             Particle.applyGravity particle
 
         Drag ->
-            Particle.applyDragForce 0.001 0.003 particle
+            Particle.applyDragForce 0.001 0.002 particle
 
         Time ->
             Particle.update dt particle
+
+        Buoyancy ->
+            let
+                submerged =
+                    min 0 particle.position.y
+
+                force =
+                    Vector.new 0 1 0
+                        |> Vector.scale -submerged
+            in
+            Particle.applyForce force particle
 
 
 
@@ -50,12 +62,13 @@ init _ =
             |> Scene.addParticle
                 (Particle.new
                     |> Particle.setMass 0.1
-                    |> Particle.setPosition (Vector.new -80 -20 0)
-                    |> Particle.applyForce (Vector.new 100 300 0)
+                    |> Particle.setPosition (Vector.new -80 20 0)
+                    |> Particle.applyForce (Vector.new 100 0 0)
                 )
             |> Scene.addSystem Gravity
             |> Scene.addSystem Time
             |> Scene.addSystem Drag
+            |> Scene.addSystem Buoyancy
         )
     , Cmd.none
     )
