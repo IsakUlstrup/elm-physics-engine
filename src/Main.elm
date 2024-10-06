@@ -29,7 +29,7 @@ applySystem dt system particle =
             Particle.applyGravity particle
 
         Drag ->
-            Particle.applyDragForce 0.001 0.002 particle
+            Particle.applyForce (Particle.dragForce 0.001 0.002 particle) particle
 
         Time ->
             Particle.update dt particle

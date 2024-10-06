@@ -1,4 +1,4 @@
-module Engine.Particle exposing (Particle, applyDragForce, applyForce, applyGravity, new, setMass, setPosition, update)
+module Engine.Particle exposing (Particle, applyForce, applyGravity, dragForce, new, setMass, setPosition, update)
 
 import Engine.Vector as Vector exposing (Vector)
 
@@ -63,8 +63,8 @@ applyForce force particle =
     }
 
 
-applyDragForce : Float -> Float -> Particle -> Particle
-applyDragForce k1 k2 particle =
+dragForce : Float -> Float -> Particle -> Vector
+dragForce k1 k2 particle =
     let
         velocity : Float
         velocity =
@@ -73,15 +73,11 @@ applyDragForce k1 k2 particle =
         dragCoeff : Float
         dragCoeff =
             k1 * velocity + k2 * velocity * velocity
-
-        force : Vector
-        force =
-            particle.velocity
-                |> Vector.normalize
-                |> Maybe.withDefault Vector.zero
-                |> Vector.scale -dragCoeff
     in
-    applyForce force particle
+    particle.velocity
+        |> Vector.normalize
+        |> Maybe.withDefault Vector.zero
+        |> Vector.scale -dragCoeff
 
 
 {-| Integrate time step in seconds
