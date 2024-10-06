@@ -108,7 +108,8 @@ update dt particle =
         , velocity =
             particle.velocity
                 |> Vector.addScaledVector dt particle.acceleration
-                |> Vector.scale (particle.damping ^ dt)
+
+        -- |> Vector.scale (particle.damping ^ dt)
         , acceleration =
             Vector.zero
     }
