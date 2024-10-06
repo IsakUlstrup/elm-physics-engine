@@ -13,7 +13,7 @@ import Svg.Attributes
 
 airDensity : Float
 airDensity =
-    0.0765
+    0.00765
 
 
 
@@ -68,7 +68,7 @@ init _ =
                 (Particle.new
                     |> Particle.setMass 1
                     |> Particle.setPosition (Vector.new -80 20 0)
-                    |> Particle.applyForce (Vector.new 100 0 0)
+                    |> Particle.applyForce (Vector.new 300 0 0)
                 )
             |> Scene.addSystem Gravity
             |> Scene.addSystem Time
@@ -102,53 +102,52 @@ update msg model =
 -- VIEW
 
 
-viewGrid : Svg msg
-viewGrid =
+viewGrid : Vector -> Svg msg
+viewGrid pos =
     let
-        viewVerticalLine : Int -> Svg msg
-        viewVerticalLine i =
+        verticalLine : Int -> Svg msg
+        verticalLine x =
             Svg.line
-                [ Svg.Attributes.x1 (i * 10 |> String.fromInt)
-                , Svg.Attributes.y1 "-1000"
-                , Svg.Attributes.x2 (i * 10 |> String.fromInt)
-                , Svg.Attributes.y2 "1000"
-                , (if i == 0 then
-                    "axis line"
-
-                   else if modBy 10 i == 0 then
-                    "thick line"
-
-                   else
-                    "line"
-                  )
-                    |> Svg.Attributes.class
+                [ Svg.Attributes.x1 (String.fromInt x)
+                , Svg.Attributes.y1 "-500"
+                , Svg.Attributes.x2 (String.fromInt x)
+                , Svg.Attributes.y2 "500"
                 ]
                 []
 
-        viewHorizontalLine : Int -> Svg msg
-        viewHorizontalLine i =
+        horizontalLine : Int -> Svg msg
+        horizontalLine y =
             Svg.line
-                [ Svg.Attributes.x1 "-1000"
-                , Svg.Attributes.y1 (i * 10 |> String.fromInt)
-                , Svg.Attributes.x2 "1000"
-                , Svg.Attributes.y2 (i * 10 |> String.fromInt)
-                , (if i == 0 then
-                    "axis line"
-
-                   else if modBy 10 i == 0 then
-                    "thick line"
-
-                   else
-                    "line"
-                  )
-                    |> Svg.Attributes.class
+                [ Svg.Attributes.x1 "-500"
+                , Svg.Attributes.y1 (String.fromInt y)
+                , Svg.Attributes.x2 "500"
+                , Svg.Attributes.y2 (String.fromInt y)
                 ]
                 []
+
+        spacing : number
+        spacing =
+            100
     in
-    Svg.g [ Svg.Attributes.class "grid" ]
-        [ Svg.g [] (List.range -20 20 |> List.map viewVerticalLine)
-        , Svg.g [] (List.range -20 20 |> List.map viewHorizontalLine)
+    Svg.g
+        [ Svg.Attributes.stroke "#262626"
+        , Svg.Attributes.strokeWidth "0.2"
+        , Svg.Attributes.transform
+            ("translate("
+                ++ String.fromInt (modBy spacing (round -pos.x))
+                ++ ", "
+                ++ String.fromInt (modBy spacing (round pos.y))
+                ++ ")"
+            )
         ]
+        (List.range -2 2
+            |> List.concatMap
+                (\i ->
+                    [ verticalLine (i * spacing)
+                    , horizontalLine (i * spacing)
+                    ]
+                )
+        )
 
 
 viewVector : String -> String -> Vector -> Svg msg
@@ -184,6 +183,17 @@ particleTransform particle =
         )
 
 
+cameraTransform : Vector -> Svg.Attribute msg
+cameraTransform position =
+    Svg.Attributes.transform
+        ("translate("
+            ++ String.fromFloat -position.x
+            ++ ", "
+            ++ String.fromFloat position.y
+            ++ ")"
+        )
+
+
 viewParticle : Particle -> Svg msg
 viewParticle particle =
     Svg.g [ particleTransform particle ]
@@ -200,13 +210,25 @@ viewParticle particle =
 
 view : Model -> Html Msg
 view model =
+    let
+        particlePosition =
+            model.scene.particles
+                |> List.head
+                |> Maybe.map .position
+                |> Maybe.withDefault Vector.zero
+    in
     Html.main_ [ Html.Attributes.id "app" ]
         [ Svg.svg
-            [ Svg.Attributes.viewBox "-100 -100 200 200"
+            [ Svg.Attributes.viewBox "-150 -150 300 300"
             , Svg.Attributes.preserveAspectRatio "XmidYmid slice"
             ]
-            [ viewGrid
-            , Svg.g [] (List.map viewParticle model.scene.particles)
+            [ viewGrid particlePosition
+            , Svg.g
+                [ Svg.Attributes.class "camera"
+                , cameraTransform particlePosition
+                ]
+                [ Svg.g [] (List.map viewParticle model.scene.particles)
+                ]
             ]
         ]
 
