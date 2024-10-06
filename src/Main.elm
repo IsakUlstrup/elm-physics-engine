@@ -167,7 +167,7 @@ viewVector color label vector =
             [ Svg.Attributes.x (String.fromFloat vector.x)
             , Svg.Attributes.y (String.fromFloat -vector.y)
             , Svg.Attributes.fill color
-            , Svg.Attributes.fontSize "0.5rem"
+            , Svg.Attributes.fontSize "0.3rem"
             ]
             [ Svg.text label ]
         ]
