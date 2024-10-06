@@ -68,7 +68,7 @@ init _ =
             |> Scene.addSystem Gravity
             |> Scene.addSystem Time
             |> Scene.addSystem Drag
-            |> Scene.addSystem Buoyancy
+         -- |> Scene.addSystem Buoyancy
         )
     , Cmd.none
     )
@@ -146,18 +146,25 @@ viewGrid =
         ]
 
 
-viewVector : Vector -> Svg msg
-viewVector vector =
+viewVector : String -> String -> Vector -> Svg msg
+viewVector color label vector =
     Svg.g []
         [ Svg.line
             [ Svg.Attributes.x1 "0"
             , Svg.Attributes.y1 "0"
             , Svg.Attributes.x2 (String.fromFloat vector.x)
             , Svg.Attributes.y2 (String.fromFloat -vector.y)
-            , Svg.Attributes.stroke "red"
+            , Svg.Attributes.stroke color
             , Svg.Attributes.strokeLinecap "round"
             ]
             []
+        , Svg.text_
+            [ Svg.Attributes.x (String.fromFloat vector.x)
+            , Svg.Attributes.y (String.fromFloat -vector.y)
+            , Svg.Attributes.fill color
+            , Svg.Attributes.fontSize "0.5rem"
+            ]
+            [ Svg.text label ]
         ]
 
 
@@ -181,7 +188,8 @@ viewParticle particle =
             , Svg.Attributes.r "5"
             ]
             []
-        , viewVector particle.velocity
+        , viewVector "red" "v" particle.velocity
+        , viewVector "green" "d" (Particle.dragForce 0.001 0.002 particle)
         ]
 
 
