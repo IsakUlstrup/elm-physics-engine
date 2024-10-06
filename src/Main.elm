@@ -11,6 +11,11 @@ import Svg exposing (Svg)
 import Svg.Attributes
 
 
+airDensity : Float
+airDensity =
+    0.0765
+
+
 
 -- SYSTEM
 
@@ -29,7 +34,7 @@ applySystem dt system particle =
             Particle.applyGravity particle
 
         Drag ->
-            Particle.applyForce (Particle.dragForce 0.001 0.002 particle) particle
+            Particle.applyForce (Particle.dragForce airDensity particle) particle
 
         Time ->
             Particle.update dt particle
@@ -61,7 +66,7 @@ init _ =
         (Scene.empty
             |> Scene.addParticle
                 (Particle.new
-                    |> Particle.setMass 0.1
+                    |> Particle.setMass 1
                     |> Particle.setPosition (Vector.new -80 20 0)
                     |> Particle.applyForce (Vector.new 100 0 0)
                 )
@@ -189,7 +194,7 @@ viewParticle particle =
             ]
             []
         , viewVector "red" "v" particle.velocity
-        , viewVector "green" "d" (Particle.dragForce 0.001 0.002 particle)
+        , viewVector "green" "d" (Particle.dragForce airDensity particle)
         ]
 
 

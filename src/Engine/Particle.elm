@@ -12,6 +12,21 @@ type alias Particle =
     }
 
 
+particleRadius : number
+particleRadius =
+    1
+
+
+dragCoefficient : Float
+dragCoefficient =
+    0.47
+
+
+frontalArea : Float
+frontalArea =
+    pi * particleRadius * particleRadius
+
+
 new : Particle
 new =
     Particle Vector.zero Vector.zero Vector.zero 0.995 10
@@ -63,21 +78,23 @@ applyForce force particle =
     }
 
 
-dragForce : Float -> Float -> Particle -> Vector
-dragForce k1 k2 particle =
+{-| Calculate particle drag force
+-}
+dragForce : Float -> Particle -> Vector
+dragForce density particle =
     let
         velocity : Float
         velocity =
             Vector.magnitude particle.velocity
 
-        dragCoeff : Float
-        dragCoeff =
-            k1 * velocity + k2 * velocity * velocity
+        force : Float
+        force =
+            0.5 * density * velocity ^ 2 * dragCoefficient * frontalArea
     in
     particle.velocity
         |> Vector.normalize
         |> Maybe.withDefault Vector.zero
-        |> Vector.scale -dragCoeff
+        |> Vector.scale -force
 
 
 {-| Integrate time step in seconds
