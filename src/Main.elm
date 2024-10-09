@@ -25,7 +25,6 @@ type System
     = Gravity
     | Drag
     | Time
-    | Buoyancy
 
 
 applySystem : Float -> System -> Particle -> Particle
@@ -39,19 +38,6 @@ applySystem dt system particle =
 
         Time ->
             Particle.update dt particle
-
-        Buoyancy ->
-            let
-                submerged : Float
-                submerged =
-                    min 0 particle.position.y
-
-                force : Vector
-                force =
-                    Vector.new 0 1 0
-                        |> Vector.scale -submerged
-            in
-            Particle.applyForce force particle
 
 
 
