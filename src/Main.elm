@@ -36,6 +36,7 @@ init _ =
                                 |> Spring.withLength 100
                                 |> Spring.withParticleTarget 1
                                 |> Spring.withContractBehaviour
+                                |> Spring.withRate 3
                             )
                         )
                     |> Particle.addForceGenerator
@@ -45,8 +46,27 @@ init _ =
                 )
             |> Scene.addParticle
                 (Particle.new
-                    |> Particle.setMass 0
+                    |> Particle.setMass 5
                     |> Particle.setPosition (Vector.new 80 20 0)
+                    |> Particle.addForceGenerator
+                        (Particle.Spring
+                            (Spring.new
+                                |> Spring.withLength 80
+                                |> Spring.withPositionTarget Vector.zero
+                                |> Spring.withRate 10
+                            )
+                        )
+                    |> Particle.addForceGenerator
+                        (Particle.Drag Scene.airDensity)
+                    |> Particle.addForceGenerator
+                        (Particle.Spring
+                            (Spring.new
+                                |> Spring.withLength 100
+                                |> Spring.withParticleTarget 0
+                                |> Spring.withContractBehaviour
+                                |> Spring.withRate 3
+                            )
+                        )
                 )
         )
     , Cmd.none

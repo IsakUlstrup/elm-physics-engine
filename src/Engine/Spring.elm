@@ -1,5 +1,6 @@
 module Engine.Spring exposing
-    ( Spring
+    ( Behaviour
+    , Spring
     , SpringTarget(..)
     , new
     , springForce
@@ -17,7 +18,7 @@ import Engine.Vector as Vector exposing (Vector)
 type alias Spring =
     { target : SpringTarget
     , length : Float
-    , behaviour : Length
+    , behaviour : Behaviour
     , rate : Float
     }
 
@@ -42,7 +43,7 @@ Contract: Will only apply force if extended beyond length (bungee)
 Both: Will apply force to keep distance at exact length
 
 -}
-type Length
+type Behaviour
     = Extend
     | Contract
     | Both
@@ -90,9 +91,11 @@ springForce position targetPosition spring =
         distance =
             Vector.subtract position targetPosition
 
+        magnitude : Float
         magnitude =
             Vector.magnitude distance - spring.length
 
+        force : Vector
         force =
             distance
                 |> Vector.normalize
