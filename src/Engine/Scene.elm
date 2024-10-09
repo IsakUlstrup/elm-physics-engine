@@ -2,7 +2,7 @@ module Engine.Scene exposing
     ( Scene
     , addParticle
     , addSpring
-    , addSystem
+    , airDensity
     , empty
     , tick
     )
@@ -15,21 +15,20 @@ import Engine.Vector as Vector exposing (Vector)
 
 {-| A scene holds particles and logic systems
 -}
-type alias Scene a =
+type alias Scene =
     { particles : Dict Int Particle
     , springs : List Spring
     , idCounter : Int
     , timing : Timing
-    , systems : List a
     }
 
 
-empty : Scene a
+empty : Scene
 empty =
-    Scene Dict.empty [] 0 Engine.Timing.new []
+    Scene Dict.empty [] 0 Engine.Timing.new
 
 
-addParticle : Particle -> Scene a -> Scene a
+addParticle : Particle -> Scene -> Scene
 addParticle particle scene =
     { scene
         | particles = Dict.insert scene.idCounter particle scene.particles
@@ -37,29 +36,36 @@ addParticle particle scene =
     }
 
 
-addSystem : a -> Scene a -> Scene a
-addSystem system scene =
-    { scene | systems = system :: scene.systems }
+airDensity : Float
+airDensity =
+    0.00765
 
 
-applySystem : (Particle -> Particle) -> Dict Int Particle -> Dict Int Particle
-applySystem f particles =
-    Dict.map (\_ value -> f value) particles
+applyGravity : Dict Int Particle -> Dict Int Particle
+applyGravity particles =
+    Dict.map (\_ particle -> Particle.applyGravity particle) particles
 
 
-applySystems : List a -> (Float -> a -> Particle -> Particle) -> Float -> Dict Int Particle -> Dict Int Particle
-applySystems systems f dt particles =
-    List.foldl (\s -> applySystem (f dt s)) particles systems
+applyDrag : Dict Int Particle -> Dict Int Particle
+applyDrag particles =
+    Dict.map (\_ particle -> Particle.applyForce (Particle.dragForce airDensity particle) particle) particles
 
 
-tick : (Float -> a -> Particle -> Particle) -> Float -> Scene a -> Scene a
-tick runSystem dt scene =
+particleUpdate : Float -> Dict Int Particle -> Dict Int Particle
+particleUpdate dt particles =
+    Dict.map (\_ particle -> Particle.update dt particle) particles
+
+
+tick : Float -> Scene -> Scene
+tick dt scene =
     let
         ( newTimer, newParticles ) =
             Engine.Timing.fixedUpdate
                 (\d ps ->
                     ps
-                        |> applySystems scene.systems runSystem d
+                        |> applyGravity
+                        |> applyDrag
+                        |> particleUpdate d
                         |> springForces scene.springs
                 )
                 dt
@@ -83,7 +89,7 @@ type alias Spring =
     }
 
 
-addSpring : Int -> Int -> Float -> Scene a -> Scene a
+addSpring : Int -> Int -> Float -> Scene -> Scene
 addSpring particle1 particle2 rate scene =
     case ( Dict.get particle1 scene.particles, Dict.get particle2 scene.particles ) of
         ( Just p1, Just p2 ) ->

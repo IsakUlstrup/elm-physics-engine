@@ -1,4 +1,4 @@
-module Main exposing (Model, Msg, System, main)
+module Main exposing (Model, Msg, main)
 
 import Browser
 import Browser.Events
@@ -12,40 +12,12 @@ import Svg exposing (Svg)
 import Svg.Attributes
 
 
-airDensity : Float
-airDensity =
-    0.00765
-
-
-
--- SYSTEM
-
-
-type System
-    = Gravity
-    | Drag
-    | Time
-
-
-applySystem : Float -> System -> Particle -> Particle
-applySystem dt system particle =
-    case system of
-        Gravity ->
-            Particle.applyGravity particle
-
-        Drag ->
-            Particle.applyForce (Particle.dragForce airDensity particle) particle
-
-        Time ->
-            Particle.update dt particle
-
-
 
 -- MODEL
 
 
 type alias Model =
-    { scene : Scene System
+    { scene : Scene
     }
 
 
@@ -64,10 +36,6 @@ init _ =
                     |> Particle.setMass 0
                     |> Particle.setPosition (Vector.new -80 40 0)
                 )
-            |> Scene.addSystem Gravity
-            |> Scene.addSystem Time
-            |> Scene.addSystem Drag
-            -- |> Scene.addSystem Buoyancy
             |> Scene.addSpring 0 1 10
         )
     , Cmd.none
@@ -87,7 +55,7 @@ update msg model =
     case msg of
         Tick dt ->
             ( { model
-                | scene = Scene.tick applySystem dt model.scene
+                | scene = Scene.tick dt model.scene
               }
             , Cmd.none
             )
@@ -95,54 +63,6 @@ update msg model =
 
 
 -- VIEW
-
-
-viewGrid : Vector -> Svg msg
-viewGrid pos =
-    let
-        verticalLine : Int -> Svg msg
-        verticalLine x =
-            Svg.line
-                [ Svg.Attributes.x1 (String.fromInt x)
-                , Svg.Attributes.y1 "-500"
-                , Svg.Attributes.x2 (String.fromInt x)
-                , Svg.Attributes.y2 "500"
-                ]
-                []
-
-        horizontalLine : Int -> Svg msg
-        horizontalLine y =
-            Svg.line
-                [ Svg.Attributes.x1 "-500"
-                , Svg.Attributes.y1 (String.fromInt y)
-                , Svg.Attributes.x2 "500"
-                , Svg.Attributes.y2 (String.fromInt y)
-                ]
-                []
-
-        spacing : number
-        spacing =
-            100
-    in
-    Svg.g
-        [ Svg.Attributes.stroke "#262626"
-        , Svg.Attributes.strokeWidth "0.2"
-        , Svg.Attributes.transform
-            ("translate("
-                ++ String.fromInt (modBy spacing (round -pos.x))
-                ++ ", "
-                ++ String.fromInt (modBy spacing (round pos.y))
-                ++ ")"
-            )
-        ]
-        (List.range -2 2
-            |> List.concatMap
-                (\i ->
-                    [ verticalLine (i * spacing)
-                    , horizontalLine (i * spacing)
-                    ]
-                )
-        )
 
 
 viewVector : String -> String -> Vector -> Svg msg
@@ -199,7 +119,7 @@ viewParticle ( _, particle ) =
             ]
             []
         , viewVector "red" "v" particle.velocity
-        , viewVector "green" "d" (Particle.dragForce airDensity particle)
+        , viewVector "green" "d" (Particle.dragForce Scene.airDensity particle)
         ]
 
 
@@ -218,8 +138,7 @@ view model =
             [ Svg.Attributes.viewBox "-150 -150 300 300"
             , Svg.Attributes.preserveAspectRatio "XmidYmid slice"
             ]
-            [ viewGrid particlePosition
-            , Svg.g
+            [ Svg.g
                 [ Svg.Attributes.class "camera"
                 , cameraTransform particlePosition
                 ]
