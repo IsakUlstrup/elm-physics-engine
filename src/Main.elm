@@ -73,10 +73,16 @@ init _ =
                     |> Particle.setPosition (Vector.new -80 20 0)
                     |> Particle.applyForce (Vector.new 300 0 0)
                 )
+            |> Scene.addParticle
+                (Particle.new
+                    |> Particle.setMass 0
+                    |> Particle.setPosition (Vector.new -80 40 0)
+                )
             |> Scene.addSystem Gravity
             |> Scene.addSystem Time
             |> Scene.addSystem Drag
-         -- |> Scene.addSystem Buoyancy
+            -- |> Scene.addSystem Buoyancy
+            |> Scene.addSpring 0 1 10
         )
     , Cmd.none
     )
