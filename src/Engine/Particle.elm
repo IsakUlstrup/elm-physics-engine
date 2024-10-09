@@ -1,5 +1,7 @@
 module Engine.Particle exposing
-    ( Particle
+    ( ForceGenerator(..)
+    , Particle
+    , addForceGenerator
     , applyForce
     , applyGravity
     , dragForce
@@ -9,6 +11,7 @@ module Engine.Particle exposing
     , update
     )
 
+import Engine.Spring exposing (Spring)
 import Engine.Vector as Vector exposing (Vector)
 
 
@@ -17,7 +20,19 @@ type alias Particle =
     , velocity : Vector
     , acceleration : Vector
     , inverseMass : Float
+    , forceGenerators : List ForceGenerator
     }
+
+
+type ForceGenerator
+    = Spring Spring
+    | Gravity
+    | Drag Float
+
+
+addForceGenerator : ForceGenerator -> Particle -> Particle
+addForceGenerator force particle =
+    { particle | forceGenerators = force :: particle.forceGenerators }
 
 
 particleRadius : number
@@ -37,7 +52,7 @@ frontalArea =
 
 new : Particle
 new =
-    Particle Vector.zero Vector.zero Vector.zero 10
+    Particle Vector.zero Vector.zero Vector.zero 10 []
 
 
 setPosition : Vector -> Particle -> Particle

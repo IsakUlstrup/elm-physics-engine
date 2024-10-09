@@ -5,6 +5,7 @@ import Browser.Events
 import Dict
 import Engine.Particle as Particle exposing (Particle)
 import Engine.Scene as Scene exposing (Scene)
+import Engine.Spring as Spring
 import Engine.Vector as Vector exposing (Vector)
 import Html exposing (Html)
 import Html.Attributes
@@ -29,14 +30,22 @@ init _ =
                 (Particle.new
                     |> Particle.setMass 1
                     |> Particle.setPosition (Vector.new -80 20 0)
-                    |> Particle.applyForce (Vector.new 300 0 0)
+                    |> Particle.addForceGenerator
+                        (Particle.Spring
+                            (Spring.new
+                                |> Spring.withLength 100
+                                |> Spring.withParticleTarget 1
+                                |> Spring.withContractBehaviour
+                            )
+                        )
+                    |> Particle.addForceGenerator
+                        Particle.Gravity
                 )
             |> Scene.addParticle
                 (Particle.new
                     |> Particle.setMass 0
-                    |> Particle.setPosition (Vector.new -80 40 0)
+                    |> Particle.setPosition (Vector.new 80 20 0)
                 )
-            |> Scene.addSpring 0 1 10
         )
     , Cmd.none
     )

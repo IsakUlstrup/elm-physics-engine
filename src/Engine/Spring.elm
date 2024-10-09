@@ -1,5 +1,6 @@
 module Engine.Spring exposing
     ( Spring
+    , SpringTarget(..)
     , new
     , springForce
     , withContractBehaviour
@@ -49,7 +50,7 @@ type Length
 
 new : Spring
 new =
-    Spring (Position Vector.zero) 0 Both 0
+    Spring (Position Vector.zero) 0 Both 1
 
 
 withParticleTarget : Int -> Spring -> Spring
