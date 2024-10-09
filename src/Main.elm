@@ -2,8 +2,8 @@ module Main exposing (Model, Msg, main)
 
 import Browser
 import Browser.Events
-import Dict
-import Engine.Particle as Particle exposing (Particle)
+import Dict exposing (Dict)
+import Engine.Particle as Particle exposing (ForceGenerator, Particle)
 import Engine.Scene as Scene exposing (Scene)
 import Engine.Spring as Spring
 import Engine.Vector as Vector exposing (Vector)
@@ -40,6 +40,8 @@ init _ =
                         )
                     |> Particle.addForceGenerator
                         Particle.Gravity
+                    |> Particle.addForceGenerator
+                        (Particle.Drag Scene.airDensity)
                 )
             |> Scene.addParticle
                 (Particle.new
@@ -118,8 +120,33 @@ cameraTransform position =
         )
 
 
-viewParticle : ( Int, Particle ) -> Svg msg
-viewParticle ( _, particle ) =
+viewParticle : Dict Int Particle -> ( Int, Particle ) -> Svg msg
+viewParticle particles ( _, particle ) =
+    let
+        viewForceGenerator : ForceGenerator -> Svg msg
+        viewForceGenerator generator =
+            case generator of
+                Particle.Gravity ->
+                    viewVector "orange" "g" (Vector.new 0 -10 0)
+
+                Particle.Drag density ->
+                    viewVector "green" "d" (Particle.dragForce density particle)
+
+                Particle.Spring spring ->
+                    (case spring.target of
+                        Spring.Particle id ->
+                            Dict.get id particles
+                                |> Maybe.map
+                                    (\targetParticle ->
+                                        Spring.springForce particle.position targetParticle.position spring
+                                    )
+                                |> Maybe.withDefault Vector.zero
+
+                        Spring.Position position ->
+                            Spring.springForce particle.position position spring
+                    )
+                        |> viewVector "yellow" "s"
+    in
     Svg.g [ particleTransform particle ]
         [ Svg.circle
             [ Svg.Attributes.cx "0"
@@ -127,8 +154,8 @@ viewParticle ( _, particle ) =
             , Svg.Attributes.r "5"
             ]
             []
+        , Svg.g [] (particle.forceGenerators |> List.map viewForceGenerator)
         , viewVector "red" "v" particle.velocity
-        , viewVector "green" "d" (Particle.dragForce Scene.airDensity particle)
         ]
 
 
@@ -151,7 +178,7 @@ view model =
                 [ Svg.Attributes.class "camera"
                 , cameraTransform particlePosition
                 ]
-                [ Svg.g [] (model.scene.particles |> Dict.toList |> List.map viewParticle)
+                [ Svg.g [] (model.scene.particles |> Dict.toList |> List.map (viewParticle model.scene.particles))
                 ]
             ]
         ]
