@@ -1,4 +1,13 @@
-module Engine.Particle exposing (Particle, applyForce, applyGravity, dragForce, new, setMass, setPosition, update)
+module Engine.Particle exposing
+    ( Particle
+    , applyForce
+    , applyGravity
+    , dragForce
+    , new
+    , setMass
+    , setPosition
+    , update
+    )
 
 import Engine.Vector as Vector exposing (Vector)
 
@@ -7,7 +16,6 @@ type alias Particle =
     { position : Vector
     , velocity : Vector
     , acceleration : Vector
-    , damping : Float
     , inverseMass : Float
     }
 
@@ -29,7 +37,7 @@ frontalArea =
 
 new : Particle
 new =
-    Particle Vector.zero Vector.zero Vector.zero 0.995 10
+    Particle Vector.zero Vector.zero Vector.zero 10
 
 
 setPosition : Vector -> Particle -> Particle
