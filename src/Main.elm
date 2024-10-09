@@ -2,6 +2,7 @@ module Main exposing (Model, Msg, System, main)
 
 import Browser
 import Browser.Events
+import Dict
 import Engine.Particle as Particle exposing (Particle)
 import Engine.Scene as Scene exposing (Scene)
 import Engine.Vector as Vector exposing (Vector)
@@ -41,9 +42,11 @@ applySystem dt system particle =
 
         Buoyancy ->
             let
+                submerged : Float
                 submerged =
                     min 0 particle.position.y
 
+                force : Vector
                 force =
                     Vector.new 0 1 0
                         |> Vector.scale -submerged
@@ -194,8 +197,8 @@ cameraTransform position =
         )
 
 
-viewParticle : Particle -> Svg msg
-viewParticle particle =
+viewParticle : ( Int, Particle ) -> Svg msg
+viewParticle ( _, particle ) =
     Svg.g [ particleTransform particle ]
         [ Svg.circle
             [ Svg.Attributes.cx "0"
@@ -211,9 +214,10 @@ viewParticle particle =
 view : Model -> Html Msg
 view model =
     let
+        particlePosition : Vector
         particlePosition =
             model.scene.particles
-                |> List.head
+                |> Dict.get 0
                 |> Maybe.map .position
                 |> Maybe.withDefault Vector.zero
     in
@@ -227,7 +231,7 @@ view model =
                 [ Svg.Attributes.class "camera"
                 , cameraTransform particlePosition
                 ]
-                [ Svg.g [] (List.map viewParticle model.scene.particles)
+                [ Svg.g [] (model.scene.particles |> Dict.toList |> List.map viewParticle)
                 ]
             ]
         ]
